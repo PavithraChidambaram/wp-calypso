@@ -8,6 +8,7 @@ import { useI18n } from '@automattic/react-i18n';
 import { Icon } from '@wordpress/components';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { useHistory } from 'react-router-dom';
+import { DomainSuggestions } from '@automattic/data-stores';
 
 /**
  * Internal dependencies
@@ -28,6 +29,7 @@ import {
 } from '../../utils/domain-suggestions';
 import { PAID_DOMAINS_TO_SHOW } from '../../constants';
 import { usePath, useCurrentStep, Step } from '../../path';
+import { trackEventWithFlow } from '../../lib/analytics';
 
 const Header: React.FunctionComponent = () => {
 	const { __, i18nLocale } = useI18n();
@@ -131,6 +133,14 @@ const Header: React.FunctionComponent = () => {
 			handleCreateSite( newUser.username, newUser.bearerToken, selectedPlanSlug );
 		}
 	}, [ newSite, newUser, handleCreateSite, selectedPlanSlug ] );
+
+	const onDomainSelect = ( suggestion: DomainSuggestions.DomainSuggestion | undefined ) => {
+		trackEventWithFlow( 'calypso_newsite_select_domain', {
+			domain_name: suggestion?.domain_name,
+		} );
+		setDomain( suggestion );
+	};
+
 	return (
 		<div
 			className="gutenboarding__header"
@@ -159,7 +169,7 @@ const Header: React.FunctionComponent = () => {
 								<DomainPickerButton
 									className="gutenboarding__header-domain-picker-button"
 									currentDomain={ domain }
-									onDomainSelect={ setDomain }
+									onDomainSelect={ onDomainSelect }
 									hasContent={
 										!! domain || !! recommendedDomainSuggestion || previousRecommendedDomain !== ''
 									}
